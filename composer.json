@@ -1,0 +1,25 @@
+{
+    "name": "solution/behat-json-rpc-extension",
+    "description": "JSON-RPC Extension for Behat",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Aleksandr Moroz",
+            "email": "netstroix@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.4",
+        "phpunit/phpunit": "~4.4",
+        "behat/behat": "~3.0",
+        "graze/guzzle-jsonrpc": "~2.1"
+    },
+    "require-dev": {
+        "phpspec/phpspec": "~2.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Solution\\JsonRpcApiExtension\\": "src/"
+        }
+    }
+}
