@@ -1,11 +1,3 @@
-# BehatJsonRpcExtension
-
-# BehatJsonRpcExtension
-
-[![Build Status](https://travis-ci.org/f1nder/BehatJsonRpcExtension.svg?branch=master)](https://travis-ci.org/f1nder/BehatJsonRpcExtension)
-
-Provides testing for JSON-PRC APIs with Behat 3
-
 ## Documentation
 
 Installation
@@ -49,9 +41,3 @@ The easiest way to keep your suite updated is to use `Composer <http://getcompos
           extensions:
             Solution\JsonRpcApiExtension:
               base_url: http://127.0.0.1:8080/json-rpc
-
-
-## Copyright
-
-Copyright (c) 2014 Aleksandr Moroz. See LICENSE for details.
-
