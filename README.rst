@@ -1,5 +1,12 @@
-Web APi Extension
-=================
+# BehatJsonRpcExtension
+
+# BehatJsonRpcExtension
+
+[![Build Status](https://travis-ci.org/f1nder/BehatJsonRpcExtension.svg?branch=master)](https://travis-ci.org/f1nder/BehatJsonRpcExtension)
+
+Provides testing for JSON-PRC APIs with Behat 3
+
+## Documentation
 
 Installation
 ------------
@@ -22,7 +29,7 @@ The easiest way to keep your suite updated is to use `Composer <http://getcompos
             "require-dev": {
                 ...
 
-                "behat/web-api-extension": "~1.0@dev"
+                "solution/behat-json-rpc-extension": "dev-master"
             }
         }
 
@@ -30,7 +37,7 @@ The easiest way to keep your suite updated is to use `Composer <http://getcompos
 
     .. code-block:: bash
 
-        $ composer update behat/web-api-extension
+        $ composer update solution/behat-json-rpc-extension
 
 3. Activate extension by specifying its class in your ``behat.yml``:
 
@@ -40,7 +47,11 @@ The easiest way to keep your suite updated is to use `Composer <http://getcompos
         default:
           # ...
           extensions:
-            Behat\WebApiExtension: ~
+            Solution\JsonRpcApiExtension:
+              base_url: http://127.0.0.1:8080/json-rpc
 
-Usage
------
+
+## Copyright
+
+Copyright (c) 2014 Aleksandr Moroz. See LICENSE for details.
+
