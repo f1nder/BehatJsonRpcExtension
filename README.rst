@@ -17,7 +17,7 @@ This extension requires:
 * PHP 5.4+
 
 Through Composer
-~~~~~~~~~~~~~~~~
+----------------
 
 The easiest way to keep your suite updated is to use `Composer <http://getcomposer.org>`_:
 
