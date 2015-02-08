@@ -1,7 +1,5 @@
 # BehatJsonRpcExtension
 
-# BehatJsonRpcExtension
-
 [![Build Status](https://travis-ci.org/f1nder/BehatJsonRpcExtension.svg?branch=master)](https://travis-ci.org/f1nder/BehatJsonRpcExtension)
 
 Provides testing for JSON-PRC APIs with Behat 3
