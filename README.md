@@ -18,7 +18,17 @@ Through Composer
 ----------------
 The easiest way to keep your suite updated is to use `Composer <http://getcomposer.org>`_:
 
+1. Define dependencies in your ``composer.json``:
 
+    .. code-block:: js
+
+        {
+            "require-dev": {
+                ...
+
+                "solution/behat-json-rpc-extension": "dev-master"
+            }
+        }
 
 ## Copyright
 
