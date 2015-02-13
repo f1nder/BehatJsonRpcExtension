@@ -4,6 +4,7 @@ namespace Solution\JsonRpcApiExtension\ServiceContainer;
 
 
 use Behat\Behat\Context\ServiceContainer\ContextExtension;
+use Behat\Symfony2Extension\ServiceContainer\Symfony2Extension;
 use Behat\Testwork\ServiceContainer\Extension;
 use Behat\Testwork\ServiceContainer\ExtensionManager;
 use Graze\GuzzleHttp\JsonRpc\Client;
@@ -86,9 +87,10 @@ class JsonRpcApiExtension implements Extension
 
     private function loadClient(ContainerBuilder $container, $config)
     {
-        $clientDifinition = new Definition('Graze\GuzzleHttp\JsonRpc\Client');
-        $clientDifinition->setFactory('Graze\GuzzleHttp\JsonRpc\Client::factory');
-        $clientDifinition->setArguments($config);
+        $clientDifinition = new Definition('Solution\JsonRpcApiExtension\Client\JsonRpcClient');
+        $clientDifinition->setFactory('Solution\JsonRpcApiExtension\Client\JsonRpcClient::factory');
+
+        $clientDifinition->setArguments($config,new Reference(Symfony2Extension::KERNEL_ID));
 
         $container->setDefinition(self::CLIENT_ID, $clientDifinition);
     }
