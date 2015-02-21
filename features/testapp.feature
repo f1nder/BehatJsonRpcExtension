@@ -16,7 +16,7 @@ Feature: Test json rpc client verification
           When  I send a request to "test.app" with params:
             | name      | Elena   |
             | lastname  | Berkova |
-          Then response should contain result:
+          Then response is successfully with contain result:
             | name      | Elena   |
             | lastname  | Berkova |
       """
