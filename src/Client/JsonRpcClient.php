@@ -24,11 +24,7 @@ class JsonRpcClient extends Client
 
     public function send(RequestInterface $request)
     {
-        if (!$this->kernel) {
-            return parent::send($request);
-        }
-
-        return $this->doRequest($request);
+        return parent::send($request);
     }
 
     /**
@@ -53,23 +49,6 @@ class JsonRpcClient extends Client
                     $config
                 )
             )
-        );
-    }
-
-    /**
-     * Do request to SF core
-     */
-    protected function doRequest(RequestInterface $request)
-    {
-        $sfReqeust = new Request([], [], [], [], [], [], $request->getBody());
-        $cl = new \Symfony\Component\HttpKernel\Client($this->kernel);
-        $cl->request($request->getMethod(), $request->getPath(), [], [], [], $request->getBody());
-        $sfResponse = $cl->getResponse();
-
-        return new Response(
-            $sfResponse->getStatusCode(),
-            [],
-            $sfReqeust->getContent()
         );
     }
 }

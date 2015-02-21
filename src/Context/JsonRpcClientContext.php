@@ -4,9 +4,9 @@ namespace Solution\JsonRpcApiExtension\Context;
 
 use Behat\Gherkin\Node\TableNode;
 use Graze\GuzzleHttp\JsonRpc\ClientInterface;
-use Graze\GuzzleHttp\JsonRpc\Exception\RequestException;
 use Graze\GuzzleHttp\JsonRpc\Message\Request;
 use Graze\GuzzleHttp\JsonRpc\Message\Response;
+use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Utils;
 use PHPUnit_Framework_Assert as Assertions;
 
@@ -20,6 +20,10 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
     protected $response;
     /** @var  Request */
     protected $request;
+    /** @var  string */
+    protected $path;
+    /** @var  array */
+    protected $headers = [];
 
     /**
      * Sets Json-Rpc Client instance.
@@ -33,6 +37,22 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
     }
 
     /**
+     * @Given  user :arg1 with pass :arg2
+     */
+    public function userWithPass($arg1, $arg2)
+    {
+        $this->headers['Authorization'] = 'Basic ' . base64_encode(sprintf('%s:%s', $arg1, $arg2));
+    }
+
+    /**
+     * @Given path :arg1
+     */
+    public function path($path)
+    {
+        $this->path = $path;
+    }
+
+    /**
      * @param $id
      *
      * @Given /^I set request id "([^"]*)"$/
@@ -40,6 +60,32 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
     public function iSetRequestId($id)
     {
         $this->setRequestId($id);
+    }
+
+
+    /**
+     * @Then response is successfully
+     */
+    public function responseIsSuccessfully()
+    {
+
+    }
+
+    /**
+     * @Then response is successfully with contain result:
+     */
+    public function responseIsSuccessfullyWithContainResult(TableNode $table)
+    {
+        Assertions::assertEquals(200, $this->response->getStatusCode());
+        Assertions::assertTrue(is_null($this->response->getRpcErrorCode()));
+
+        $etalon = $table->getRowsHash();
+        $actual = $this->response->getRpcResult();
+
+        foreach ($etalon as $key => $needle) {
+            Assertions::assertArrayHasKey($key, $actual, var_export($actual, true));
+            Assertions::assertEquals($etalon[$key], $actual[$key]);
+        }
     }
 
     /**
@@ -54,20 +100,10 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
     {
         $id = $this->getRequestId() ? $this->getRequestId() : uniqid();
         $this->request = $this->client->request($id, $method, $params->getRowsHash());
-
+        $this->request->setHeaders($this->headers);
+        $this->request->setPath($this->request->getPath() . $this->path);
         $this->sendRequest();
     }
-
-    /**
-     * @param TableNode $result
-     *
-     * @Then /^(?:the )?response should contain result:$/
-     */
-    public function theResponseShouldContainResult(TableNode $result)
-    {
-        Assertions::assertEquals($result->getRowsHash(), $this->response->getRpcResult());
-    }
-
 
     /**
      * Parse json-rpc error response
@@ -94,6 +130,8 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
      */
     public function theResponseShouldContainErrorData($id, $message, TableNode $table)
     {
+        Assertions::assertEquals(200, $this->response->getStatusCode());
+
         $this->theResponseShouldContainError($id, $message);
         $error = $this->getFieldFromBody('error', $this->response->getBody());
         Assertions::assertArrayHasKey('data', $error);
@@ -118,10 +156,14 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
 
     private function sendRequest()
     {
+
         try {
             $this->response = $this->client->send($this->request);
         } catch (RequestException $e) {
+
             $this->response = $e->getResponse();
+
+            var_dump((string)$this->response->getBody());
             if (null === $this->response) {
                 throw $e;
             }
@@ -139,4 +181,5 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
 
         return isset($rpc[$key]) ? $rpc[$key] : null;
     }
+
 }
