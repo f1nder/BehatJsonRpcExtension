@@ -62,9 +62,8 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
         $this->setRequestId($id);
     }
 
-
     /**
-     * @Then response is successfully with contain result:
+     * {@inheritDoc}
      */
     public function responseIsSuccessfullyWithContainResult(TableNode $table)
     {
@@ -76,8 +75,30 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
 
         foreach ($etalon as $key => $needle) {
             Assertions::assertArrayHasKey($key, $actual, var_export($actual, true));
-            Assertions::assertEquals($etalon[$key], $actual[$key]);
+            $etalonValue = $etalon[$key];
+
+            if ($etalonValue == '@true') {
+                $etalonValue = true;
+            } else {
+                if ($etalonValue == '@false') {
+                    $etalonValue = false;
+                }
+            }
+
+            Assertions::assertEquals($etalonValue, $actual[$key], sprintf('Field: %s, response: %s', $key, $this->response->getBody()));
         }
+    }
+
+    /**
+     * Sends Json rpc request to specific method without params
+     *
+     * @param string $method request method
+     *
+     * @When /^(?:I )?send a request to "([^"]+)" without params$/
+     */
+    public function iSendARequestWithoutParams($method)
+    {
+        $this->iSendARequest($method, new TableNode([]));
     }
 
     /**
