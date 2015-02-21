@@ -63,7 +63,7 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
     }
 
     /**
-     * {@inheritDoc}
+     * @Then response is successfully with contain result:
      */
     public function responseIsSuccessfullyWithContainResult(TableNode $table)
     {
