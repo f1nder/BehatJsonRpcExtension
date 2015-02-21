@@ -63,7 +63,7 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
     }
 
     /**
-     * {@inheritDoc}
+     * @Then response is successfully with contain result:
      */
     public function responseIsSuccessfullyWithContainResult(TableNode $table)
     {
@@ -169,17 +169,14 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
 
     private function sendRequest()
     {
-
         try {
             $this->response = $this->client->send($this->request);
         } catch (RequestException $e) {
-
             $this->response = $e->getResponse();
-
-            var_dump((string)$this->response->getBody());
             if (null === $this->response) {
                 throw $e;
             }
+            throw new \Exception((string)$this->response->getBody());
         }
     }
 
