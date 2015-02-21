@@ -17,10 +17,8 @@
     "require-dev": {
         "silex/silex": "~1",
         "symfony/process": "~2.1",
-        "symfony/symfony": "~2.6",
         "zendframework/zend-server": "~2.3",
         "zendframework/zend-json": "~2.3",
-        "behat/symfony2-extension": "~2.0"
     },
     "autoload": {
         "psr-4": {

@@ -64,11 +64,11 @@ class JsonRpcApiExtension implements Extension
     {
         $builder
             ->addDefaultsIfNotSet()
-            ->children()
-            ->scalarNode('base_url')
-            ->defaultValue('http://localhost')
-            ->end()
-            ->end()
+              ->children()
+                ->scalarNode('base_url')
+                ->defaultValue('http://localhost')
+              ->end()
+             ->end()
             ->end();
     }
 
@@ -89,8 +89,7 @@ class JsonRpcApiExtension implements Extension
     {
         $clientDifinition = new Definition('Solution\JsonRpcApiExtension\Client\JsonRpcClient');
         $clientDifinition->setFactory('Solution\JsonRpcApiExtension\Client\JsonRpcClient::factory');
-
-        $clientDifinition->setArguments($config,new Reference(Symfony2Extension::KERNEL_ID));
+        $clientDifinition->setArguments($config);
 
         $container->setDefinition(self::CLIENT_ID, $clientDifinition);
     }
