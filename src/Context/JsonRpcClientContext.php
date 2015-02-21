@@ -68,7 +68,7 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
      */
     public function responseIsSuccessfullyWithContainResult(TableNode $table)
     {
-        Assertions::assertEquals(200, $this->response->getStatusCode());
+        Assertions::assertEquals(200, $this->response->getStatusCode(), sprintf('Response with error "%s"', $this->response->getBody()));
         Assertions::assertTrue(is_null($this->response->getRpcErrorCode()), sprintf('Response with error "%s"', $this->response->getBody()));
 
         $etalon = $table->getRowsHash();
