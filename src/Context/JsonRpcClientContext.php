@@ -126,10 +126,22 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
      *
      * @Then /^(?:the )?response should be error with id "([^"]+)", message "([^"]+)"$/
      */
-    public function theResponseShouldContainError($id, $message)
+    public function theResponseShouldContainErrorWithMessage($id, $message)
     {
-        Assertions::assertEquals($this->response->getRpcErrorCode(), intval($id));
-        Assertions::assertEquals($this->response->getRpcErrorMessage(), $message);
+        Assertions::assertEquals(intval($id), $this->response->getRpcErrorCode());
+        Assertions::assertEquals($message, $this->response->getRpcErrorMessage());
+    }
+
+    /**
+     * Parse json-rpc error response
+     *
+     * @param int|string $id
+     *
+     * @Then /^(?:the )?response should be error with id "([^"]+)"$/
+     */
+    public function theResponseShouldContainError($id)
+    {
+        Assertions::assertEquals(intval($id), $this->response->getRpcErrorCode());
     }
 
     /**
@@ -148,7 +160,7 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
         $this->theResponseShouldContainError($id, $message);
         $error = $this->getFieldFromBody('error', $this->response->getBody());
         Assertions::assertArrayHasKey('data', $error);
-        Assertions::assertEquals($error['data'], $table->getRowsHash());
+        Assertions::assertEquals($table->getRowsHash(), $error['data']);
     }
 
     /**
