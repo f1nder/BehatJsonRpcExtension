@@ -9,27 +9,48 @@ use Graze\GuzzleHttp\JsonRpc\Message\Response;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Utils;
 use PHPUnit_Framework_Assert as Assertions;
+use Symfony\Component\PropertyAccess\PropertyAccessor;
+use Symfony\Component\PropertyAccess\PropertyPath;
 
+/**
+ * JSON-RPC Client
+ */
 class JsonRpcClientContext implements JsonRpcClientAwareContext
 {
-    /** @var  ClientInterface */
+    /**
+     * @var  ClientInterface
+     */
     protected $client;
-    /** @var  int */
+
+    /**
+     * @var int
+     */
     protected $requestId;
-    /** @var  Response */
+
+    /**
+     * @var  Response
+     */
     protected $response;
-    /** @var  Request */
+
+    /**
+     * @var  Request
+     */
     protected $request;
-    /** @var  string */
+
+    /**
+     * @var  string
+     */
     protected $path;
-    /** @var  array */
+
+    /**
+     * @var  array
+     */
     protected $headers = [];
 
     /**
      * Sets Json-Rpc Client instance.
      *
      * @param ClientInterface $client
-     * @return void
      */
     public function setClient(ClientInterface $client)
     {
@@ -37,15 +58,26 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
     }
 
     /**
-     * @Given  user :arg1 with pass :arg2
+     * Set the username and password for send request
+     *
+     * @Given  /^user "([^"]+)" with pass "([^"]+)"$/
+     *
+     * @param string $username
+     * @param string $password
      */
-    public function userWithPass($arg1, $arg2)
+    public function userWithPass($username, $password)
     {
-        $this->headers['Authorization'] = 'Basic ' . base64_encode(sprintf('%s:%s', $arg1, $arg2));
+        $header = base64_encode(sprintf('%s:%s', $username, $password));
+
+        $this->headers['Authorization'] = 'Basic ' . $header;
     }
 
     /**
-     * @Given path :arg1
+     * Set path for send request
+     *
+     * @Given /^path "([^"]+)"$/
+     *
+     * @param string $path
      */
     public function path($path)
     {
@@ -53,7 +85,9 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
     }
 
     /**
-     * @param $id
+     * Set request identifier
+     *
+     * @param string|integer $id
      *
      * @Given /^I set request id "([^"]*)"$/
      */
@@ -63,7 +97,15 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
     }
 
     /**
+     * Check response is successfully with result.
+     * In table data, you can use "PropertyPath" for get elements from JSON. As example:
+     *
+     * | element[key][foo-key] | some_value |
+     * | element[key][bar-key] | some_value |
+     *
      * @Then response is successfully with contain result:
+     *
+     * @param TableNode $table
      */
     public function responseIsSuccessfullyWithContainResult(TableNode $table)
     {
@@ -73,8 +115,9 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
         $etalon = $table->getRowsHash();
         $actual = $this->response->getRpcResult();
 
+        $propertyAccessor = new PropertyAccessor();
+
         foreach ($etalon as $key => $needle) {
-            Assertions::assertArrayHasKey($key, $actual, var_export($actual, true));
             $etalonValue = $etalon[$key];
 
             if ($etalonValue == '@true') {
@@ -85,7 +128,25 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
                 }
             }
 
-            Assertions::assertEquals($etalonValue, $actual[$key], sprintf('Field: %s, response: %s', $key, $this->response->getBody()));
+            if (strpos($key, '[') !== false) {
+                // Try get value via "PropertyPath"
+                $elements = explode('[', $key);
+                $elements = array_map(function ($element){
+                    return trim($element, '][');
+                }, $elements);
+
+                $propertyPath = '[' . implode($elements, '][') . ']';
+
+                $propertyPath = new PropertyPath($propertyPath);
+                $actualValue = $propertyAccessor->getValue($actual, $propertyPath);
+                $rootKey = $propertyPath->getElement(0);
+            } else {
+                $actualValue = $actual[$key];
+                $rootKey = $key;
+            }
+
+            Assertions::assertArrayHasKey($rootKey, $actual, var_export($actual, true));
+            Assertions::assertEquals($etalonValue, $actualValue, sprintf('Field: %s, response: %s', $key, $this->response->getBody()));
         }
     }
 
@@ -104,7 +165,7 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
     /**
      * Sends Json rpc request to specific method.
      *
-     * @param string $method request method
+     * @param string    $method request method
      * @param TableNode $params table of params values
      *
      * @When /^(?:I )?send a request to "([^"]+)" with params:$/
@@ -121,8 +182,8 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
     /**
      * Parse json-rpc error response
      *
-     * @param $id
-     * @param $message
+     * @param string|integer $id
+     * @param string         $message
      *
      * @Then /^(?:the )?response should be error with id "([^"]+)", message "([^"]+)"$/
      */
@@ -147,9 +208,9 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
     /**
      * Check json-rpc error data
      *
-     * @param $id
-     * @param $message
-     * @param TableNode $table
+     * @param string|integer $id
+     * @param string         $message
+     * @param TableNode      $table
      *
      * @Then /^(?:the )?response should be error with id "([^"]+)", message "([^"]+)", data:$/
      */
@@ -159,12 +220,15 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
 
         $this->theResponseShouldContainError($id, $message);
         $error = $this->getFieldFromBody('error', $this->response->getBody());
+
         Assertions::assertArrayHasKey('data', $error);
         Assertions::assertEquals($table->getRowsHash(), $error['data']);
     }
 
     /**
-     * @param mixed $requestId
+     * Set request identifier
+     *
+     * @param string|integer $requestId
      */
     protected function setRequestId($requestId)
     {
@@ -172,6 +236,8 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
     }
 
     /**
+     * Get request id
+     *
      * @return mixed
      */
     protected function getRequestId()
@@ -179,23 +245,33 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
         return $this->requestId;
     }
 
+    /**
+     * Send request
+     *
+     * @throws \Exception
+     */
     private function sendRequest()
     {
         try {
             $this->response = $this->client->send($this->request);
         } catch (RequestException $e) {
             $this->response = $e->getResponse();
+
             if (null === $this->response) {
                 throw $e;
             }
-            throw new \Exception((string)$this->response->getBody());
+
+            throw new \Exception((string) $this->response->getBody());
         }
     }
 
     /**
-     * @param $key
-     * @param $body
-     * @return null
+     * Get field from body
+     *
+     * @param string $key
+     * @param string $body
+     *
+     * @return mixed
      */
     protected function getFieldFromBody($key, $body)
     {
@@ -203,5 +279,4 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
 
         return isset($rpc[$key]) ? $rpc[$key] : null;
     }
-
 }
