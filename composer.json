@@ -12,7 +12,8 @@
         "php": ">=5.4",
         "phpunit/phpunit": "~4.4",
         "behat/behat": "~3.0",
-        "graze/guzzle-jsonrpc": "~2.1"
+        "graze/guzzle-jsonrpc": "~2.1",
+        "symfony/property-access": "~2.1"
     },
     "require-dev": {
         "silex/silex": "~1",
