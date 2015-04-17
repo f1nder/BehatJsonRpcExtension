@@ -97,56 +97,78 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
     }
 
     /**
+     * Check response is successfully
+     *
+     * @Then /^response is successfully$/
+     */
+    public function responseIsSuccessfully()
+    {
+        Assertions::assertEquals(200, $this->response->getStatusCode(), sprintf(
+            'Response with error "%s".',
+            $this->response->getBody()
+        ));
+
+        Assertions::assertNull($this->response->getRpcErrorCode(), sprintf(
+            'Response with error "%s".',
+            $this->response->getBody()
+        ));
+    }
+
+    /**
      * Check response is successfully with result.
      * In table data, you can use "PropertyPath" for get elements from JSON. As example:
      *
      * | element[key][foo-key] | some_value |
      * | element[key][bar-key] | some_value |
      *
-     * @Then response is successfully with contain result:
+     * @Then /^response is successfully with contain result:$/
      *
      * @param TableNode $table
      */
     public function responseIsSuccessfullyWithContainResult(TableNode $table)
     {
-        Assertions::assertEquals(200, $this->response->getStatusCode(), sprintf('Response with error "%s"', $this->response->getBody()));
-        Assertions::assertTrue(is_null($this->response->getRpcErrorCode()), sprintf('Response with error "%s"', $this->response->getBody()));
+        Assertions::assertEquals(200, $this->response->getStatusCode(), sprintf(
+            'Response with error: "%s".',
+            $this->response->getBody()
+        ));
 
-        $etalon = $table->getRowsHash();
+        Assertions::assertNull($this->response->getRpcErrorCode(), sprintf(
+            'Response with error: "%s".',
+            $this->response->getBody()
+        ));
+
+        $expected = $table->getRowsHash();
         $actual = $this->response->getRpcResult();
 
-        $propertyAccessor = new PropertyAccessor();
+        $this->assertArrayEquals($actual, $expected);
+    }
 
-        foreach ($etalon as $key => $needle) {
-            $etalonValue = $etalon[$key];
+    /**
+     * Check response successfully with list result
+     *
+     * @Then /^response is successfully with collection result:$/
+     *
+     * @param TableNode $table
+     */
+    public function responseIsSuccessfullyWithContainListResult(TableNode $table)
+    {
+        $this->responseIsSuccessfully();
 
-            if ($etalonValue == '@true') {
-                $etalonValue = true;
-            } else {
-                if ($etalonValue == '@false') {
-                    $etalonValue = false;
-                }
+        $rpcResult = $this->response->getRpcResult();
+
+        foreach($table->getHash() as $key => $row) {
+            if (isset($row['__key__'])) {
+                $key = $row['__key__'];
+                unset ($row['__key__']);
             }
 
-            if (strpos($key, '[') !== false) {
-                // Try get value via "PropertyPath"
-                $elements = explode('[', $key);
-                $elements = array_map(function ($element){
-                    return trim($element, '][');
-                }, $elements);
+            Assertions::assertArrayHasKey($key, $rpcResult, sprintf(
+                'Not found data with key "%s" in array (%s).',
+                $key,
+                json_encode($rpcResult)
+            ));
 
-                $propertyPath = '[' . implode($elements, '][') . ']';
-
-                $propertyPath = new PropertyPath($propertyPath);
-                $actualValue = $propertyAccessor->getValue($actual, $propertyPath);
-                $rootKey = $propertyPath->getElement(0);
-            } else {
-                $actualValue = $actual[$key];
-                $rootKey = $key;
-            }
-
-            Assertions::assertArrayHasKey($rootKey, $actual, var_export($actual, true));
-            Assertions::assertEquals($etalonValue, $actualValue, sprintf('Field: %s, response: %s', $key, $this->response->getBody()));
+            $this->assertArrayEquals($rpcResult[$key], $row);
         }
     }
 
@@ -250,7 +272,7 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
      *
      * @throws \Exception
      */
-    private function sendRequest()
+    protected function sendRequest()
     {
         try {
             $this->response = $this->client->send($this->request);
@@ -262,6 +284,61 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
             }
 
             throw new \Exception((string) $this->response->getBody());
+        }
+    }
+
+    /**
+     * Check array equals (For check JSON-RPC responses)
+     *
+     * @param array $actual   The data from JSON-RPC response
+     * @param array $expected The array data from TableHash
+     */
+    protected function assertArrayEquals(array $actual, array $expected)
+    {
+        $propertyAccessor = new PropertyAccessor();
+
+        foreach ($expected as $key => $needle) {
+            $expectedValue = $expected[$key];
+
+            // Fix type
+            if ($expectedValue == '@true') {
+                $expectedValue = true;
+            } else {
+                if ($expectedValue == '@false') {
+                    $expectedValue = false;
+                }
+            }
+
+            if (strpos($key, '[') !== false) {
+                // Try get value via "PropertyPath"
+                $elements = explode('[', $key);
+                $elements = array_map(function ($element){
+                    return trim($element, '][');
+                }, $elements);
+
+                $propertyPath = '[' . implode($elements, '][') . ']';
+
+                $propertyPath = new PropertyPath($propertyPath);
+                $actualValue = $propertyAccessor->getValue($actual, $propertyPath);
+                $rootKey = $propertyPath->getElement(0);
+            } else {
+                $actualValue = $actual[$key];
+                $rootKey = $key;
+            }
+
+            Assertions::assertArrayHasKey($rootKey, $actual, sprintf(
+                'Not found key "%s" in array (%s).',
+                $rootKey,
+                json_encode($actual)
+            ));
+
+            Assertions::assertEquals($expectedValue, $actualValue, sprintf(
+                'Failed assert equals for key "%s". Expected: "%s"; Actual: "%s". Body: "%s"',
+                $key,
+                $expectedValue,
+                $actualValue,
+                $this->response->getBody()
+            ));
         }
     }
 
