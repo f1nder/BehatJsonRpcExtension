@@ -2,7 +2,6 @@
 
 namespace Solution\JsonRpcApiExtension\ServiceContainer;
 
-
 use Behat\Behat\Context\ServiceContainer\ContextExtension;
 use Behat\Symfony2Extension\ServiceContainer\Symfony2Extension;
 use Behat\Testwork\ServiceContainer\Extension;
@@ -15,25 +14,17 @@ use Symfony\Component\DependencyInjection\Reference;
 
 class JsonRpcApiExtension implements Extension
 {
-
     const CLIENT_ID = 'jsonrpc_api.client';
 
     /**
-     * You can modify the container here before it is dumped to PHP code.
-     *
-     * @param ContainerBuilder $container
-     *
-     * @api
+     * {@inheritDoc}
      */
     public function process(ContainerBuilder $container)
     {
-        // TODO: Implement process() method.
     }
 
     /**
-     * Returns the extension config key.
-     *
-     * @return string
+     * {@inheritDoc}
      */
     public function getConfigKey()
     {
@@ -41,42 +32,37 @@ class JsonRpcApiExtension implements Extension
     }
 
     /**
-     * Initializes other extensions.
-     *
-     * This method is called immediately after all extensions are activated but
-     * before any extension `configure()` method is called. This allows extensions
-     * to hook into the configuration of other extensions providing such an
-     * extension point.
-     *
-     * @param ExtensionManager $extensionManager
+     * {@inheritDoc}
      */
     public function initialize(ExtensionManager $extensionManager)
     {
-        // TODO: Implement initialize() method.
     }
 
     /**
-     * Setups configuration for the extension.
-     *
-     * @param ArrayNodeDefinition $builder
+     * {@inheritDoc}
      */
     public function configure(ArrayNodeDefinition $builder)
     {
         $builder
             ->addDefaultsIfNotSet()
-              ->children()
+            ->children()
                 ->scalarNode('base_url')
-                ->defaultValue('http://localhost')
-              ->end()
-             ->end()
+                    ->info('The URL for send request with use JSON-RPC protocol.')
+                    ->defaultValue('http://localhost')
+                    ->beforeNormalization()
+                        ->ifTrue(function ($value){
+                            return strpos($value, 'http') === false;
+                        })
+                        ->then(function ($value) {
+                            return $value ? 'http://' . $value : $value;
+                        })
+                    ->end()
+                ->end()
             ->end();
     }
 
     /**
-     * Loads extension services into temporary container.
-     *
-     * @param ContainerBuilder $container
-     * @param array $config
+     * {@inheritDoc}
      */
     public function load(ContainerBuilder $container, array $config)
     {
@@ -84,14 +70,13 @@ class JsonRpcApiExtension implements Extension
         $this->loadContextInitializer($container, $config);
     }
 
-
     private function loadClient(ContainerBuilder $container, $config)
     {
-        $clientDifinition = new Definition('Solution\JsonRpcApiExtension\Client\JsonRpcClient');
-        $clientDifinition->setFactory('Solution\JsonRpcApiExtension\Client\JsonRpcClient::factory');
-        $clientDifinition->setArguments($config);
+        $clientDefinition = new Definition('Solution\JsonRpcApiExtension\Client\JsonRpcClient');
+        $clientDefinition->setFactory('Solution\JsonRpcApiExtension\Client\JsonRpcClient::factory');
+        $clientDefinition->setArguments($config);
 
-        $container->setDefinition(self::CLIENT_ID, $clientDifinition);
+        $container->setDefinition(self::CLIENT_ID, $clientDefinition);
     }
 
     private function loadContextInitializer(ContainerBuilder $container, $config)
@@ -100,6 +85,7 @@ class JsonRpcApiExtension implements Extension
             new Reference(self::CLIENT_ID),
             $config
         ));
+
         $definition->addTag(ContextExtension::INITIALIZER_TAG);
         $container->setDefinition('web_api.context_initializer', $definition);
     }

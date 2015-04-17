@@ -6,5 +6,4 @@ use Graze\GuzzleHttp\JsonRpc\Client;
 
 class JsonRpcClient extends Client
 {
-
 }
