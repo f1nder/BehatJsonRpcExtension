@@ -144,17 +144,44 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
     }
 
     /**
-     * Check response successfully with list result
+     * Check response successfully with collection result
+     *
+     * @Then /^response is successfully with "(?P<count>[^"]+)" elements in collection. Result:$/
+     *
+     * @param TableNode $table
+     * @param int       $count
+     */
+    public function responseIsSuccessfullyWithContainListAndCountResult(TableNode $table, $count)
+    {
+        $this->responseIsSuccessfullyWithContainListResult($table, $count);
+    }
+
+    /**
+     *
      *
      * @Then /^response is successfully with collection result:$/
      *
      * @param TableNode $table
+     * @param int       $count
      */
-    public function responseIsSuccessfullyWithContainListResult(TableNode $table)
+    public function responseIsSuccessfullyWithContainListResult(TableNode $table, $count = null)
     {
         $this->responseIsSuccessfully();
 
         $rpcResult = $this->response->getRpcResult();
+
+        Assertions::assertTrue(is_array($rpcResult), sprintf(
+            'The RPC response must be a array, but "%s" given.',
+            gettype($rpcResult)
+        ));
+
+        if ($count !== null) {
+            Assertions::assertCount((int) $count, $rpcResult, sprintf(
+                'The response should have %d elements, but %d given.',
+                $count,
+                count($rpcResult)
+            ));
+        }
 
         foreach($table->getHash() as $key => $row) {
             if (isset($row['__key__'])) {
