@@ -157,7 +157,32 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
     }
 
     /**
+     * Check success response with scalar result
      *
+     * @Then /^response is successfully with contain result "([^"]+)"$/
+     *
+     * @param string $result
+     */
+    public function responseIsSuccessfullyWithContainScalarResult($result)
+    {
+        Assertions::assertEquals(200, $this->response->getStatusCode(), sprintf(
+            'Response with error "%s"',
+            $this->response->getBody()
+        ));
+
+        Assertions::assertTrue(is_null($this->response->getRpcErrorCode()), sprintf(
+            'Response with error "%s"',
+            $this->response->getBody()
+        ));
+
+        Assertions::assertEquals($result, $this->response->getRpcResult(), sprintf(
+            'Result must be a contain "%s"',
+            $result
+        ));
+    }
+
+    /**
+     * Check response successfully with list result
      *
      * @Then /^response is successfully with collection result:$/
      *
