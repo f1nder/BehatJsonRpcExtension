@@ -247,7 +247,28 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
     public function iSendARequest($method, TableNode $params)
     {
         $id = $this->getRequestId() ? $this->getRequestId() : uniqid();
-        $this->request = $this->client->request($id, $method, $params->getRowsHash());
+
+        $params = $params->getRowsHash();
+        $requestParameters = [];
+
+        foreach ($params as $parameterKey => $parameterValue) {
+            $property = new PropertyPath($parameterKey);
+            $propertyElements = $property->getElements();
+
+            $activeKeyReference = &$requestParameters;
+
+            while ($propertyElement = array_shift($propertyElements)) {
+                if (!isset($activeKeyReference[$propertyElement])) {
+                    $activeKeyReference[$propertyElement] = []; // Force set array value
+                }
+
+                $activeKeyReference = &$activeKeyReference[$propertyElement];
+            }
+
+            $activeKeyReference = $parameterValue;
+        }
+
+        $this->request = $this->client->request($id, $method, $requestParameters);
         $this->request->setHeaders($this->headers);
         $this->request->setPath($this->request->getPath() . $this->path);
         $this->sendRequest();
