@@ -257,7 +257,7 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
 
             $activeKeyReference = &$requestParameters;
 
-            while ($propertyElement = array_shift($propertyElements)) {
+            while (null !== $propertyElement = array_shift($propertyElements)) {
                 if (!isset($activeKeyReference[$propertyElement])) {
                     $activeKeyReference[$propertyElement] = []; // Force set array value
                 }
