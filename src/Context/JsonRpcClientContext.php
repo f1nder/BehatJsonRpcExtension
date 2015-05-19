@@ -265,6 +265,13 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
                 $activeKeyReference = &$activeKeyReference[$propertyElement];
             }
 
+            if (preg_match('/^@\[([^\]]+)\]$/', trim($parameterValue), $parts)) {
+                $elements = explode(',', $parts[1]);
+                $elements = array_map('trim', $elements);
+
+                $parameterValue = $elements;
+            }
+
             $activeKeyReference = $parameterValue;
         }
 
