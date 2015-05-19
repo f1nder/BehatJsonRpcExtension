@@ -388,9 +388,14 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
             // Fix type
             if ($expectedValue == '@true') {
                 $expectedValue = true;
-            } else {
-                if ($expectedValue == '@false') {
-                    $expectedValue = false;
+            } else if ($expectedValue == '@false') {
+                $expectedValue = false;
+            } else if (preg_match('/^@\[([^\]]+)?\]$/', $expectedValue, $parts)) {
+                if (!empty($parts[1])) {
+                    $expectedValue = explode(',', $parts[1]);
+                    $expectedValue = array_map('trim', $expectedValue);
+                } else {
+                    $expectedValue = [];
                 }
             }
 
@@ -420,8 +425,8 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
             Assertions::assertEquals($expectedValue, $actualValue, sprintf(
                 'Failed assert equals for key "%s". Expected: "%s"; Actual: "%s". Body: "%s"',
                 $key,
-                $expectedValue,
-                $actualValue,
+                is_scalar($expectedValue) ? $expectedValue : (is_array($expectedValue) ? 'Array(' . json_encode($expectedValue) . ')' : 'Invalid type'),
+                is_scalar($actualValue) ? $actualValue : (is_array($actualValue) ? 'Array(' . json_encode($actualValue) . ')' : 'Invalid type'),
                 $this->response->getBody()
             ));
         }
