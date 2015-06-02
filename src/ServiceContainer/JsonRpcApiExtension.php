@@ -87,6 +87,6 @@ class JsonRpcApiExtension implements Extension
         ));
 
         $definition->addTag(ContextExtension::INITIALIZER_TAG);
-        $container->setDefinition('web_api.context_initializer', $definition);
+        $container->setDefinition('jsonrpc_api.context_initializer', $definition);
     }
 }
