@@ -12,7 +12,6 @@ interface JsonRpcClientAwareContext extends Context
      * Sets Json-Rpc Client instance.
      *
      * @param ClientInterface $client
-     * @return void
      */
     public function setClient(ClientInterface $client);
 }

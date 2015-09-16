@@ -325,7 +325,7 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
     {
         Assertions::assertEquals(200, $this->response->getStatusCode());
 
-        $this->theResponseShouldContainError($id, $message);
+        $this->theResponseShouldContainErrorWithMessage($id, $message);
         $error = $this->getFieldFromBody('error', $this->response->getBody());
 
         Assertions::assertArrayHasKey('data', $error);

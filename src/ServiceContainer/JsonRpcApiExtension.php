@@ -58,6 +58,18 @@ class JsonRpcApiExtension implements Extension
                         })
                     ->end()
                 ->end()
+
+                ->arrayNode('options')
+                    ->info('The options for Guzzle service')
+                    ->prototype('scalar')
+                    ->end()
+                ->end()
+
+                ->arrayNode('defaults')
+                    ->info('The default options for Guzzle service')
+                    ->prototype('scalar')
+                    ->end()
+                ->end()
             ->end();
     }
 
@@ -72,9 +84,19 @@ class JsonRpcApiExtension implements Extension
 
     private function loadClient(ContainerBuilder $container, $config)
     {
+        $options = [];
+
+        if ($config['options']) {
+            $options += $config['options'];
+        }
+
+        if ($config['defaults']) {
+            $options['defaults'] = $config['defaults'];
+        }
+
         $clientDefinition = new Definition('Solution\JsonRpcApiExtension\Client\JsonRpcClient');
         $clientDefinition->setFactory('Solution\JsonRpcApiExtension\Client\JsonRpcClient::factory');
-        $clientDefinition->setArguments($config);
+        $clientDefinition->setArguments([$config['base_url'], $options]);
 
         $container->setDefinition(self::CLIENT_ID, $clientDefinition);
     }

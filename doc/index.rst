@@ -17,7 +17,6 @@ The easiest way to keep your suite updated is to use `Composer <http://getcompos
 
         {
             "require-dev": {
-                ...
 
                 "solution/behat-json-rpc-extension": "dev-master"
             }
@@ -35,7 +34,23 @@ The easiest way to keep your suite updated is to use `Composer <http://getcompos
 
         # behat.yml
         default:
-          # ...
-          extensions:
+            extensions:
+                Solution\JsonRpcApiExtension:
+                    base_url: http://127.0.0.1:8080/json-rpc
+
+
+Guzzle options
+--------------
+
+If you want set the guzzle options (disable verify peer as example), you can rewrite any options for Guzzle client:
+
+.. code-block:: yaml
+
+    default:
+        extensions:
             Solution\JsonRpcApiExtension:
-              base_url: http://127.0.0.1:8080/json-rpc
+                base_url: http://127.0.0.1:8080/json-rpc
+                options:
+                    ssl.certificate_authority: system
+                defaults:
+                    verify: false
