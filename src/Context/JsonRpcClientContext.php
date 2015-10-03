@@ -146,12 +146,12 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
     /**
      * Check response successfully with collection result
      *
-     * @Then /^response is successfully with "(?P<count>[^"]+)" elements in collection. Result:$/
+     * @Then /^response is successfully with "(\d+)" elements in collection. Result:$/
      *
-     * @param TableNode $table
      * @param int       $count
+     * @param TableNode $table
      */
-    public function responseIsSuccessfullyWithContainListAndCountResult(TableNode $table, $count)
+    public function responseIsSuccessfullyWithContainListAndCountResult($count, TableNode $table)
     {
         $this->responseIsSuccessfullyWithContainListResult($table, $count);
     }
@@ -390,6 +390,8 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
                 $expectedValue = true;
             } else if ($expectedValue == '@false') {
                 $expectedValue = false;
+            } else if ($expectedValue == '@null') {
+                $expectedValue = null;
             } else if (preg_match('/^@\[([^\]]+)?\]$/', $expectedValue, $parts)) {
                 if (!empty($parts[1])) {
                     $expectedValue = explode(',', $parts[1]);
@@ -422,13 +424,21 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
                 json_encode($actual)
             ));
 
-            Assertions::assertEquals($expectedValue, $actualValue, sprintf(
-                'Failed assert equals for key "%s". Expected: "%s"; Actual: "%s". Body: "%s"',
-                $key,
-                is_scalar($expectedValue) ? $expectedValue : (is_array($expectedValue) ? 'Array(' . json_encode($expectedValue) . ')' : 'Invalid type'),
-                is_scalar($actualValue) ? $actualValue : (is_array($actualValue) ? 'Array(' . json_encode($actualValue) . ')' : 'Invalid type'),
-                $this->response->getBody()
-            ));
+            if ($expectedValue == '@notNull') {
+                Assertions::assertNotNull($actualValue, sprintf(
+                    'Failed assert equals for key "%s". Expected: NOT NULL. Body: "%s"',
+                    $key,
+                    $this->response->getBody()
+                ));
+            } else {
+                Assertions::assertEquals($expectedValue, $actualValue, sprintf(
+                    'Failed assert equals for key "%s". Expected: "%s"; Actual: "%s". Body: "%s"',
+                    $key,
+                    is_scalar($expectedValue) ? $expectedValue : (is_array($expectedValue) ? 'Array(' . json_encode($expectedValue) . ')' : 'Invalid type'),
+                    is_scalar($actualValue) ? $actualValue : (is_array($actualValue) ? 'Array(' . json_encode($actualValue) . ')' : 'Invalid type'),
+                    $this->response->getBody()
+                ));
+            }
         }
     }
 
