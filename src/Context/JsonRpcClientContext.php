@@ -292,7 +292,7 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
      * @param string|integer $id
      * @param string         $message
      *
-     * @Then /^(?:the )?response should be error with id "([^"]+)", message "([^"]+)"$/
+     * @Then /^(?:the )?response should be error with id "([^"]+)", message "(.+)"$/
      */
     public function theResponseShouldContainErrorWithMessage($id, $message)
     {
@@ -319,7 +319,7 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
      * @param string         $message
      * @param TableNode      $table
      *
-     * @Then /^(?:the )?response should be error with id "([^"]+)", message "([^"]+)", data:$/
+     * @Then /^(?:the )?response should be error with id "([^"]+)", message "(.+)", data:$/
      */
     public function theResponseShouldContainErrorData($id, $message, TableNode $table)
     {
