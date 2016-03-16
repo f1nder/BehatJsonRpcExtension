@@ -28,6 +28,11 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
     protected $requestId;
 
     /**
+     * @var bool
+     */
+    private $throwsRequestException = true;
+
+    /**
      * @var  Response
      */
     protected $response;
@@ -60,7 +65,7 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
     /**
      * Set the username and password for send request
      *
-     * @Given  /^user "([^"]+)" with pass "([^"]+)"$/
+     * @Given /^user "([^"]+)" with pass "([^"]+)"$/
      *
      * @param string $username
      * @param string $password
@@ -70,6 +75,33 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
         $header = base64_encode(sprintf('%s:%s', $username, $password));
 
         $this->headers['Authorization'] = 'Basic ' . $header;
+    }
+
+    /**
+     * Set header
+     *
+     * @Given /^header "([^"]+)" with value "(.+)"$/
+     *
+     * @param string $name
+     * @param string $value
+     */
+    public function setHeader($name, $value)
+    {
+        $this->headers[$name] = $value;
+    }
+
+    /**
+     * Set headers
+     *
+     * @Given /^headers:$/
+     *
+     * @param TableNode $headers
+     */
+    public function setHeaders(TableNode $headers)
+    {
+        foreach ($headers->getRowsHash() as $name => $value) {
+            $this->setHeader($name, $value);
+        }
     }
 
     /**
@@ -287,6 +319,58 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
     }
 
     /**
+     * Not throws request exceptions.
+     * As example: we know, what server return error - 401 error, or 404 error.
+     *
+     * @Given /^no throw server error$/
+     */
+    public function noThrowServerError()
+    {
+        $this->throwsRequestException = false;
+    }
+
+    /**
+     * The server should return status code
+     *
+     * @param integer $status
+     *
+     * @Then /^(?:the )?server should return "([^"]+)" status code$/
+     */
+    public function theServerShouldReturnStatusCode($status)
+    {
+        Assertions::assertNotNull($this->response, 'Missing response. Can you not send request?');
+        Assertions::assertEquals($status, $this->response->getStatusCode(), 'Invalid HTTP status code.');
+    }
+
+    /**
+     * The server should return headers
+     *
+     * @param TableNode $headers
+     *
+     * @Then /^(?:the )?server should return headers:$/
+     */
+    public function theServerShouldReturnHeaders(TableNode $headers)
+    {
+        Assertions::assertNotNull($this->response, 'Missing response. Can you not send request?');
+        $responseHeaders = [];
+
+        foreach ($this->response->getHeaders() as $name => $value) {
+            $responseHeaders[strtolower($name)] = $value;
+        }
+
+        foreach ($headers->getRowsHash() as $headerName => $headerValue) {
+            $headerName = strtolower($headerName);
+
+            Assertions::assertArrayHasKey($headerName, $responseHeaders, 'Missing header in response.');
+
+            $responseHeader = $responseHeaders[$headerName];
+            $responseHeader = implode('; ', $responseHeader);
+
+            Assertions::assertEquals($headerValue, $responseHeader, 'The header is not equals.');
+        }
+    }
+
+    /**
      * Parse json-rpc error response
      *
      * @param string|integer $id
@@ -365,10 +449,14 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
             $this->response = $e->getResponse();
 
             if (null === $this->response) {
-                throw $e;
+                if ($this->throwsRequestException) {
+                    throw $e;
+                }
             }
 
-            throw new \Exception((string) $this->response->getBody());
+            if ($this->throwsRequestException) {
+                throw new \Exception((string)$this->response->getBody());
+            }
         }
     }
 
