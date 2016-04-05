@@ -7,7 +7,6 @@ use Graze\GuzzleHttp\JsonRpc\ClientInterface;
 use Graze\GuzzleHttp\JsonRpc\Message\Request;
 use Graze\GuzzleHttp\JsonRpc\Message\Response;
 use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Utils;
 use PHPUnit_Framework_Assert as Assertions;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
 use Symfony\Component\PropertyAccess\PropertyPath;
@@ -312,9 +311,19 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
             $activeKeyReference = $parameterValue;
         }
 
-        $this->request = $this->client->request($id, $method, $requestParameters);
-        $this->request->setHeaders($this->headers);
-        $this->request->setPath($this->request->getPath() . $this->path);
+        /** @var \Graze\GuzzleHttp\JsonRpc\Message\RequestInterface $request */
+        $request = $this->client->request($id, $method, $requestParameters);
+
+        foreach ($this->headers as $headerName => $headerValue) {
+            $request = $request->withHeader($headerName, $headerValue);
+        }
+
+        $uri = $request->getUri();
+        $uri = $uri->withPath($uri->getPath() . $this->path);
+        $request = $request->withUri($uri);
+
+        $this->request = $request;
+
         $this->sendRequest();
     }
 
@@ -540,7 +549,7 @@ class JsonRpcClientContext implements JsonRpcClientAwareContext
      */
     protected function getFieldFromBody($key, $body)
     {
-        $rpc = Utils::jsonDecode((string)$body, true);
+        $rpc = json_decode($body, true);
 
         return isset($rpc[$key]) ? $rpc[$key] : null;
     }

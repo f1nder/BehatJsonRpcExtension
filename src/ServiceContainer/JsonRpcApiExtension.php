@@ -91,7 +91,7 @@ class JsonRpcApiExtension implements Extension
         }
 
         if ($config['defaults']) {
-            $options['defaults'] = $config['defaults'];
+            $options += $config['defaults'];
         }
 
         $clientDefinition = new Definition('Solution\JsonRpcApiExtension\Client\JsonRpcClient');
