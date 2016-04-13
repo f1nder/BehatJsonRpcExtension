@@ -9,7 +9,7 @@
         }
     ],
     "require": {
-        "php": ">=5.4",
+        "php": ">=5.5",
         "phpunit/phpunit": "~4.4",
         "behat/behat": "~3.0",
         "graze/guzzle-jsonrpc": "~3.0",
